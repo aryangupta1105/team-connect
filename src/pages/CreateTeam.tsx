@@ -1,3 +1,6 @@
+import Select from "react-select";
+import { problemStatements } from "../lib/problemStatements";
+  const problemOptions = problemStatements.map(ps => ({ value: ps.id, label: `${ps.title} (${ps.id})` }));
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -86,14 +89,21 @@ export function CreateTeam() {
             </div>
             {/* Problem Statement */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Problem Statement</label>
-              <input
-                type="text"
-                value={formData.problem}
-                onChange={(e) => setFormData(prev => ({ ...prev, problem: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base font-medium bg-gray-50"
-                placeholder="What problem are you solving?"
-                required
+              <label className="block text-sm font-medium text-gray-700 mb-2">Problem Statements</label>
+              <Select
+                isMulti
+                name="problems"
+                options={problemOptions}
+                value={problemOptions.filter(opt => formData.problem.split(", ").includes(opt.value))}
+                onChange={(selected) =>
+                  setFormData(prev => ({
+                    ...prev,
+                    problem: selected && selected.length > 0 ? selected.map((opt) => opt.value).join(", ") : ""
+                  }))
+                }
+                classNamePrefix="react-select"
+                styles={{ control: (base) => ({ ...base, borderRadius: "0.75rem", borderColor: "#d1d5db", minHeight: "2.5rem" }) }}
+                isClearable
               />
             </div>
             {/* Description */}
@@ -143,22 +153,21 @@ export function CreateTeam() {
                   </span>
                 ))}
               </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={skillInput}
-                  onChange={(e) => setSkillInput(e.target.value)}
-                  className="flex-1 px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base font-medium bg-gray-50"
-                  placeholder="Add a skill..."
-                />
-                <button
-                  type="button"
-                  onClick={addSkill}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold shadow hover:bg-blue-700 transition-colors"
-                >
-                  Add
-                </button>
-              </div>
+              <input
+                type="text"
+                value={skillInput}
+                onChange={(e) => setSkillInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (skillInput.trim() && !formData.requiredSkills.includes(skillInput.trim())) {
+                      addSkill();
+                    }
+                  }
+                }}
+                className="flex-1 px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base font-medium bg-gray-50"
+                placeholder="Add a skill and press Enter..."
+              />
             </div>
             {/* Submit Button */}
             <div className="pt-4">
