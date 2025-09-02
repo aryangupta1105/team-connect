@@ -16,6 +16,8 @@ import { Requests } from "./pages/Requests";
 import { Admin } from "./pages/Admin";
 import Profiles from "./pages/Profiles";
 import {motion} from "framer-motion"
+import { UserCircle, Menu } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 export default function App() {
 
@@ -101,6 +103,19 @@ function Navigation() {
   const location = useLocation();
   const user = useQuery(api.auth.loggedInUser);
   const dashboardStats = useQuery(api.admin.getUserDashboardStats);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (profileMenuOpen && profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [profileMenuOpen]);
 
   const navItems = [
     { path: "/", label: "Home" },
@@ -116,7 +131,7 @@ function Navigation() {
   ];
 
   return (
-    <header className="bg-gradient-to-r from-orange-400 via-white to-green-500 border-b border-gray-200 sticky top-0 z-50 shadow-lg">
+    <header className="bg-gradient-to-br from-orange-500 via-white to-green-500 border-b border-gray-200 sticky top-0 z-50 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center gap-2 text-2xl font-extrabold text-blue-900 tracking-tight">
@@ -133,18 +148,20 @@ function Navigation() {
             </span>
           </Link>
           <div className="flex items-center space-x-8 justify-between">
-            <nav className="hidden md:flex space-x-6">
+            <nav className="hidden md:flex space-x-2 gap-2">
               {navItems.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`px-4 py-2 rounded-xl text-base font-semibold transition-all relative shadow-sm ${
-                    location.pathname === item.path
-                      ? "bg-blue-100 text-blue-700 border border-blue-300"
-                      : "text-gray-800 hover:text-orange-700 hover:bg-orange-50"
-                  }`}
+                  className={`group px-4 py-2 rounded-xl text-base font-semibold transition-all relative shadow-sm flex items-center gap-2
+                    ${location.pathname === item.path
+                      ? " bg-orange-600 text-white border border-blue-400 scale-105 shadow-lg"
+                      : "text-gray-800 hover:text-orange-700 hover:bg-orange-50  hover:shadow-md"}
+                  `}
                 >
-                  {item.label}
+                  <span className="transition-transform group-hover:scale-110">
+                    {item.label}
+                  </span>
                   {typeof item.badge === "number" && item.badge > 0 && (
                     <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center border border-white shadow">
                       {item.badge}
@@ -153,17 +170,73 @@ function Navigation() {
                 </Link>
               ))}
             </nav>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Link
-              to="/profile"
-              className="text-base text-gray-700 hover:text-blue-900 font-semibold"
+            {/* Burger icon for mobile */}
+            <button
+              className="md:hidden flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 hover:bg-blue-200 border border-blue-300 focus:outline-none"
+              onClick={() => setMobileNavOpen((open) => !open)}
+              aria-label="Open navigation menu"
             >
-              {user?.email}
-            </Link>
-            <SignOutButton />
+              <Menu className="w-7 h-7 text-blue-700" />
+            </button>
+          </div>
+          <div className="flex items-center space-x-4 relative">
+            <div className="relative" ref={profileMenuRef}>
+              <button
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 hover:bg-blue-200 border border-blue-300 focus:outline-none"
+                onClick={() => setProfileMenuOpen((open) => !open)}
+                aria-label="Profile menu"
+              >
+                <UserCircle className="w-7 h-7 text-blue-700" />
+              </button>
+              {profileMenuOpen && (
+                <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
+                  <Link
+                    to="/profile"
+                    className="block px-4 py-3 text-gray-700 hover:bg-blue-50 font-semibold rounded-t-xl"
+                    onClick={() => setProfileMenuOpen(false)}
+                  >
+                    My Profile
+                  </Link>
+                  <div className="border-t border-gray-100"></div>
+                  <button
+                    className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 font-semibold rounded-b-xl"
+                    onClick={() => {
+                      setProfileMenuOpen(false);
+                    }}
+                  >
+                    <SignOutButton/>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
+        {/* Mobile nav menu */}
+        {mobileNavOpen && (
+          <nav className="md:hidden flex flex-col gap-2 py-4 px-2 bg-white rounded-xl shadow-lg border border-gray-200 absolute top-16 left-4 right-4 z-40">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`group px-4 py-3 rounded-xl text-base font-semibold transition-all relative shadow-sm flex items-center gap-2
+                  ${location.pathname === item.path
+                    ? "bg-gradient-to-r from-blue-500 via-blue-300 to-blue-100 text-white border border-blue-400 scale-105 shadow-lg"
+                    : "text-gray-800 hover:text-orange-700 hover:bg-orange-50 hover:scale-105 hover:shadow-md"}
+                `}
+                onClick={() => setMobileNavOpen(false)}
+              >
+                <span className="transition-transform group-hover:scale-110">
+                  {item.label}
+                </span>
+                {typeof item.badge === "number" && item.badge > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center border border-white shadow">
+                    {item.badge}
+                  </span>
+                )}
+              </Link>
+            ))}
+          </nav>
+        )}
       </div>
     </header>
   );

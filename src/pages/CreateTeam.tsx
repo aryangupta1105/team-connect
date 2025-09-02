@@ -54,144 +54,124 @@ export function CreateTeam() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="bg-white rounded-lg shadow p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Create New Team</h1>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Team Name
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Domain
-            </label>
-            <input
-              type="text"
-              value={formData.domain}
-              onChange={(e) => setFormData(prev => ({ ...prev, domain: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="e.g., Web Development, AI/ML, Mobile Apps"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Problem Statement
-            </label>
-            <input
-              type="text"
-              value={formData.problem}
-              onChange={(e) => setFormData(prev => ({ ...prev, problem: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="What problem are you solving?"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows={4}
-              placeholder="Describe your project idea..."
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Maximum Team Size
-            </label>
-            <select
-              value={formData.maxSize}
-              onChange={(e) => setFormData(prev => ({ ...prev, maxSize: parseInt(e.target.value) }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={2}>2 members</option>
-              <option value={3}>3 members</option>
-              <option value={4}>4 members</option>
-              <option value={5}>5 members</option>
-              <option value={6}>6 members</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Required Skills
-            </label>
-            <div className="flex gap-2 mb-2">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-orange-700 pb-16 flex items-center justify-center">
+      <div className="w-full max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 border border-blue-100">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-blue-900 mb-6 font-display text-center bg-gradient-to-r from-orange-800 via-green-800 to-blue-900 bg-clip-text text-transparent">
+            Create New Team
+          </h1>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Team Name */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Team Name</label>
               <input
                 type="text"
-                value={skillInput}
-                onChange={(e) => setSkillInput(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Add a required skill"
-                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addSkill())}
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base font-medium bg-gray-50"
+                required
               />
+            </div>
+            {/* Domain */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Domain</label>
+              <input
+                type="text"
+                value={formData.domain}
+                onChange={(e) => setFormData(prev => ({ ...prev, domain: e.target.value }))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base font-medium bg-gray-50"
+                placeholder="e.g., Web Development, AI/ML, Mobile Apps"
+                required
+              />
+            </div>
+            {/* Problem Statement */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Problem Statement</label>
+              <input
+                type="text"
+                value={formData.problem}
+                onChange={(e) => setFormData(prev => ({ ...prev, problem: e.target.value }))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base font-medium bg-gray-50"
+                placeholder="What problem are you solving?"
+                required
+              />
+            </div>
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base font-medium bg-gray-50"
+                rows={4}
+                placeholder="Describe your project idea..."
+                required
+              />
+            </div>
+            {/* Maximum Team Size */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Maximum Team Size</label>
+              <input
+                type="number"
+                min={2}
+                max={10}
+                value={formData.maxSize}
+                onChange={(e) => setFormData(prev => ({ ...prev, maxSize: Number(e.target.value) }))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base font-medium bg-gray-50"
+                required
+              />
+            </div>
+            {/* Requires Female Member */}
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={formData.requiresFemale}
+                onChange={(e) => setFormData(prev => ({ ...prev, requiresFemale: e.target.checked }))}
+                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                id="requiresFemale"
+              />
+              <label htmlFor="requiresFemale" className="text-sm text-gray-700">Requires Female Member</label>
+            </div>
+            {/* Required Skills */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Required Skills</label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {formData.requiredSkills.map((skill) => (
+                  <span key={skill} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold flex items-center gap-1">
+                    {skill}
+                    <button type="button" className="ml-1 text-red-500 hover:text-red-700" onClick={() => removeSkill(skill)}>&times;</button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={skillInput}
+                  onChange={(e) => setSkillInput(e.target.value)}
+                  className="flex-1 px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base font-medium bg-gray-50"
+                  placeholder="Add a skill..."
+                />
+                <button
+                  type="button"
+                  onClick={addSkill}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold shadow hover:bg-blue-700 transition-colors"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+            {/* Submit Button */}
+            <div className="pt-4">
               <button
-                type="button"
-                onClick={addSkill}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                type="submit"
+                className={`w-full px-6 py-3 rounded-xl font-bold text-lg shadow transition-all bg-gradient-to-r from-orange-400 via-blue-500 to-green-500 text-white hover:scale-105 hover:shadow-xl ${isSubmitting ? "opacity-60 cursor-not-allowed" : ""}`}
+                disabled={isSubmitting}
               >
-                Add
+                {isSubmitting ? "Creating..." : "Create Team"}
               </button>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {formData.requiredSkills.map((skill) => (
-                <span
-                  key={skill}
-                  className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                >
-                  {skill}
-                  <button
-                    type="button"
-                    onClick={() => removeSkill(skill)}
-                    className="ml-2 text-blue-600 hover:text-blue-800"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="requiresFemale"
-              checked={formData.requiresFemale}
-              onChange={(e) => setFormData(prev => ({ ...prev, requiresFemale: e.target.checked }))}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label htmlFor="requiresFemale" className="ml-2 block text-sm text-gray-700">
-              Requires at least one female member
-            </label>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? "Creating..." : "Create Team"}
-          </button>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );

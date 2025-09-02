@@ -71,7 +71,7 @@ export function Requests() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans bg-gradient-to-br from-blue-900 via-purple-900 to-orange-700 pb-16">
+    <div className="min-h-screen bg-gray-50 font-sans lg:px-0 px-1 bg-gradient-to-br from-blue-900 via-purple-900 to-orange-700 pb-16">
       
       {/* Gradient Header */}
       <motion.section
@@ -79,7 +79,7 @@ export function Requests() {
         initial="hidden"
         animate="visible"
         transition={{ duration: 0.7 }}
-        className="relative flex flex-col items-center justify-center py-16 px-4 mb-12 bg-gradient-to-br from-blue-100 via-white to-gray-100 rounded-b-3xl shadow-lg"
+        className="relative flex flex-col items-center justify-center lg:py-12 py-8 px-4 mb-12 bg-gradient-to-br from-blue-100 via-white to-gray-100 rounded-b-3xl shadow-lg"
       >
         <h1 className="text-4xl md:text-5xl font-extrabold text-blue-900 mb-2 tracking-tight font-display">Requests & Invites</h1>
         <p className="text-lg md:text-xl text-gray-700 font-medium">Manage all your team requests and invites in one place.</p>

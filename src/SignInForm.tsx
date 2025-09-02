@@ -9,7 +9,7 @@ export function SignInForm() {
   const [submitting, setSubmitting] = useState(false);
 
   return (
-    <div className="w-full max-w-md mx-auto -mt-5">
+    <div className="w-full max-w-md mx-auto px-5 -mt-5">
       <div className="bg-white rounded-2xl shadow-lg p-8 border border-blue-100">
         <div className="text-center mb-6">
           <h2 className="text-3xl font-extrabold text-blue-900 mb-2 font-display bg-gradient-to-r from-orange-800 via-green-800 to-blue-900 bg-clip-text text-transparent ">

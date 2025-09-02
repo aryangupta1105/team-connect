@@ -221,10 +221,10 @@ export default function Profiles() {
       {/* Filters */}
       <div className="max-w-7xl mx-auto mb-6 px-4  ">
     
-        <div className="flex flex-wrap justify-between shadow-md items-center  px-10 gap-10  rounded-xl p-4 ">
+        <div className="flex lg:flex-row flex-col flex-wrap justify-between shadow-md items-center  px-10 gap-10  rounded-xl p-4 ">
           <h1 className="font-bold text-3xl  text-center text-wrap text-gray-300">Find Your Teammates</h1>
 
-          <div className="flex gap-5 items-center text-gray-300">
+          <div className="flex gap-5 lg:flex-row flex-col lg:items-center text-gray-300">
             {/* Skill Filter */}
             <div className="flex flex-col items-center min-w-[200px]">
               <label className="text-sm font-semibold text-gray-300 mb-1">Skill</label>
