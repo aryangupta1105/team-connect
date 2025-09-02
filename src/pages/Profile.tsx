@@ -5,6 +5,15 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 
 export function Profile() {
+  const [linkError, setLinkError] = useState("");
+  function isValidUrl(url: string) {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  }
   const profile = useQuery(api.profiles.getCurrentProfile);
   const generateUploadUrl = useMutation(api.profiles.generateUploadUrl);
   const updateProfile = useMutation(api.profiles.createOrUpdateProfile);
@@ -156,10 +165,18 @@ export function Profile() {
 
   // Link handlers
   const addLink = () => {
-    if (linkInput.trim() && !formData.links.includes(linkInput.trim())) {
-      setFormData(prev => ({ ...prev, links: [...prev.links, linkInput.trim()] }));
-      setLinkInput("");
+    if (!linkInput.trim()) return;
+    if (!isValidUrl(linkInput.trim())) {
+      setLinkError("Please enter a valid URL.");
+      return;
     }
+    if (formData.links.includes(linkInput.trim())) {
+      setLinkError("");
+      return;
+    }
+    setFormData(prev => ({ ...prev, links: [...prev.links, linkInput.trim()] }));
+    setLinkInput("");
+    setLinkError("");
   };
   const removeLink = (link: string) => {
     setFormData(prev => ({ ...prev, links: prev.links.filter(l => l !== link) }));
@@ -209,6 +226,7 @@ export function Profile() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
+              <p className="text-xs text-yellow-700 mt-1"><span className="font-bold">Note:</span> Enter your full name as it will be visible to teams.</p>
             </div>
 
             {/* Branch & Year */}
@@ -225,7 +243,7 @@ export function Profile() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
-                <select
+                 <select
                   value={formData.year}
                   onChange={e => setFormData(prev => ({ ...prev, year: parseInt(e.target.value) }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -264,6 +282,7 @@ export function Profile() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Your phone number (hidden until shared)"
               />
+              <p className="text-xs text-yellow-700 mt-1"><span className="font-bold">Note:</span> Your contact info is hidden until you share it with a team.</p>
             </div>
 
             {/* Skills */}
@@ -275,13 +294,11 @@ export function Profile() {
                   value={skillInput}
                   onChange={e => setSkillInput(e.target.value)}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Add a skill"
+                  placeholder="Add a skill and press Enter (no hashtags)"
                   onKeyPress={e => e.key === "Enter" && (e.preventDefault(), addSkill())}
                 />
-                <button type="button" onClick={addSkill} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                  Add
-                </button>
               </div>
+              <p className="text-xs text-yellow-700 mb-2"><span className="font-bold">Note:</span> Add skills as plain words (no hashtags), press Enter to add each skill.</p>
               <div className="flex flex-wrap gap-2">
                 {formData.skills.map(skill => (
                   <span key={skill} className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
@@ -306,20 +323,25 @@ export function Profile() {
 
             {/* Links */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Links</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Links <span className="text-gray-500">(add LinkedIn, github, portfolio, LeetCode, project links, etc. to get your profile noticed)</span></label>
               <div className="flex gap-2 mb-2">
                 <input
                   type="url"
                   value={linkInput}
-                  onChange={e => setLinkInput(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="https://github.com/username"
+                  onChange={e => {
+                    setLinkInput(e.target.value);
+                    setLinkError("");
+                  }}
+                  className={`flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${linkError ? 'border-red-400' : 'border-gray-300'}`}
+                  placeholder="e.g. https://linkedin.com/in/username"
                   onKeyPress={e => e.key === "Enter" && (e.preventDefault(), addLink())}
                 />
                 <button type="button" onClick={addLink} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                   Add
                 </button>
               </div>
+              {linkError && <p className="text-xs text-red-600 mb-2"><span className="font-bold">Error:</span> {linkError}</p>}
+              <p className="text-xs text-yellow-700 mb-2"><span className="font-bold">Note:</span> Add more socials and project links to get your profile noticed (LinkedIn, portfolio, LeetCode, GitHub, etc.).</p>
               <div className="space-y-2">
                 {formData.links.map(link => (
                   <div key={link} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg">

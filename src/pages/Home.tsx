@@ -13,10 +13,30 @@ import {
 } from "lucide-react";
 
 export default function Home() {
+  const [showNote, setShowNote] = React.useState(true);
+  const [progress, setProgress] = React.useState(100);
   const profile = useQuery(api.profiles.getCurrentProfile);
   const myTeams = useQuery(api.teams.getMyTeams);
   const stats = useQuery(api.admin.getAdminStats);
   const navigate = useNavigate();
+  // Guidance note for users
+  const showProfileNote = !profile?.name || !profile?.avatar || !profile?.skills || profile?.skills.length === 0;
+  const completion = Math.round(((profile?.skills?.length || 0) + (profile?.avatar ? 1 : 0) + (profile?.name ? 1 : 0)) / 3 * 100);
+  React.useEffect(() => {
+    if (showProfileNote && showNote) {
+      let start = 100;
+      setProgress(100);
+      const interval = setInterval(() => {
+        start -= 2;
+        setProgress(start);
+        if (start <= 0) {
+          setShowNote(false);
+          clearInterval(interval);
+        }
+      }, 100);
+      return () => clearInterval(interval);
+    }
+  }, [showProfileNote, showNote]);
   // Minimal fade-in for sections
   
 
@@ -117,7 +137,18 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen px-5 bg-gradient-to-br from-blue-900 via-purple-900 to-orange-700 pb-16 font-sans">
+    <div className="min-h-screen px-5 bg-gradient-to-br from-blue-900 via-purple-900 to-orange-700 pb-16 font-sans relative">
+      {showProfileNote && showNote && completion < 50 && (
+        <div className="absolute top-4 left-4 z-50 w-[320px] px-4 py-3 bg-yellow-100 border-l-4 border-yellow-500 rounded shadow text-yellow-900 text-base font-semibold">
+          <span className="font-bold">Note:</span> Complete your profile to get viewed by teams. Requests will not be sent until your profile is complete.
+          <div className="mt-2 h-2 w-full bg-yellow-300 rounded overflow-hidden">
+            <div
+              className="h-2 bg-yellow-500 transition-all duration-100"
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+        </div>
+      )}
       {/* Hero Section */}
       <motion.section
         variants={fadeIn}
