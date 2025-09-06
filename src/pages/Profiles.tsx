@@ -42,9 +42,11 @@ const genderOptions = [
 ];
 
 export default function Profiles() {
+  const [expandedDesc, setExpandedDesc] = useState<string | null>(null);
+  const [nameSearch, setNameSearch] = useState("");
   // Filters
   const [skillFilter, setSkillFilter] = useState<string[]>([]);
-  const [yearFilter, setYearFilter] = useState<string>("");
+  const [yearFilter, setYearFilter] = useState<"1" | "2" | "3" | "4" | "Others" | "">("");
   const [genderFilter, setGenderFilter] = useState<"m" | "f" | "o" | "">("");
   const [lookingFilter, setLookingFilter] = useState<boolean | "">("");
   // Track loading state per team per user
@@ -55,11 +57,13 @@ export default function Profiles() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   // Queries & mutations
-  const profiles = useQuery(api.profiles.listAvailableProfiles, {
-    skillFilter: skillFilter.join(","),
-    genderFilter: genderFilter ? genderFilter : undefined,
-    lookingOnly: lookingFilter === true ? true : undefined,
-  });
+ const profiles = useQuery(api.profiles.listAvailableProfiles, {
+  skillFilter: skillFilter.length > 0 ? skillFilter : undefined,
+  yearFilter: yearFilter || undefined,
+  genderFilter: genderFilter || undefined,
+  lookingOnly: lookingFilter === true ? true : undefined,
+});
+
   const currentUserProfile = useQuery(api.profiles.getCurrentProfile);
   const currentUserTeams = useQuery(api.teams.getMyTeams, {});
   const sendInvite = useMutation(api.requests.sendInvite);
@@ -79,40 +83,61 @@ export default function Profiles() {
   }, [openDropdown]);
 
   // Filtering logic
-  const filteredProfiles = useMemo(() => {
-    let filtered = profiles ?? [];
-    if (skillFilter.length > 0) {
-      filtered = filtered.filter((p: any) =>
-        skillFilter.some(f =>
-          p.skills.map((s: string) => s.trim().toLowerCase()).includes(f.trim().toLowerCase())
-        )
-      );
-    }
-    if (yearFilter) {
-      filtered = filtered.filter((p: any) =>
-        yearFilter === "Others"
-          ? !["1", "2", "3", "4"].includes(String(p.year))
-          : String(p.year) === yearFilter
-      );
-    }
-    if (genderFilter) {
-      filtered = filtered.filter((p: any) => p.gender === genderFilter);
-    }
-    if (lookingFilter !== "") {
-      filtered = filtered.filter((p: any) => p.isLooking === lookingFilter);
-    }
-    return filtered;
-  }, [profiles, skillFilter, yearFilter, genderFilter, lookingFilter]);
+ 
+    const filteredProfiles = useMemo(() => {
+      let filtered = profiles ?? [];
+      // Name search (case-insensitive, trimmed)
+      if (nameSearch.trim()) {
+        const search = nameSearch.trim().toLowerCase();
+        filtered = filtered.filter((p: any) =>
+          p.name && p.name.toLowerCase().includes(search)
+        );
+      }
+      // Skill filter: show all profiles that match any of the skills typed, sorted by most matched (all matches first)
+     if (skillFilter.length > 0) {
+      filtered = filtered
+        .map((p: any) => {
+          const profileSkills = (p.skills || []).map((ps: string) => ps.trim().toLowerCase());
+          // Count matches (partial allowed)
+          const matchCount = skillFilter.reduce((acc, filterSkill) => {
+            return acc + (profileSkills.some((ps: string) => ps.includes(filterSkill)) ? 1 : 0);
+          }, 0);
+          return { ...p, _matchCount: matchCount };
+        })
+        .filter((p: any) => p._matchCount > 0) // keep only if ≥1 match
+        .sort((a: any, b: any) => b._matchCount - a._matchCount) // sort desc
+        .map(({ _matchCount, ...rest }) => rest); // remove temp field
+}
+
+
+
+      if (yearFilter) {
+        filtered = filtered.filter((p: any) =>
+          yearFilter === "Others"
+            ? !["1", "2", "3", "4"].includes(String(p.year))
+            : String(p.year) === yearFilter
+        );
+      }
+      if (genderFilter) {
+        filtered = filtered.filter((p: any) => p.gender === genderFilter);
+      }
+      if (lookingFilter !== "") {
+        filtered = filtered.filter((p: any) => p.isLooking === lookingFilter);
+      }
+      return filtered;
+    }, [profiles, nameSearch, skillFilter, yearFilter, genderFilter, lookingFilter]);
 
   // Sorting logic: prioritize fewer teams, more complete profiles
   const sortedProfiles = useMemo(() => {
     return [...filteredProfiles].sort((a: any, b: any) => {
-      // Use teamsJoinedCount if available, else fallback to teamsJoined?.length
+      // Sort by profile completion percent (decreasing)
+      const aCompletion = getProfileCompletion(a);
+      const bCompletion = getProfileCompletion(b);
+      if (aCompletion !== bCompletion) return bCompletion - aCompletion;
+      // Then by teams joined (increasing)
       const aTeams = a.teamsJoinedCount ?? (a.teamsJoined?.length ?? 0);
       const bTeams = b.teamsJoinedCount ?? (b.teamsJoined?.length ?? 0);
-      if (aTeams !== bTeams) return aTeams - bTeams;
-      // More complete profile first
-      return getProfileCompletion(b) - getProfileCompletion(a);
+      return aTeams - bTeams;
     });
   }, [filteredProfiles]);
 
@@ -216,36 +241,47 @@ export default function Profiles() {
     "bg-gradient-to-r from-blue-600 via-orange-400 to-yellow-400";
 
   return (
-    <div className="min-h-screen  py-8 px-2 bg-gradient-to-br from-blue-900 via-purple-900 to-orange-700 pb-16">
-      
-      {/* Filters */}
-      <div className="max-w-7xl mx-auto mb-6 px-4  ">
-    
-        <div className="flex lg:flex-row flex-col flex-wrap justify-between shadow-md items-center  px-10 gap-10  rounded-xl p-4 ">
-          <h1 className="font-bold text-3xl  text-center text-wrap text-gray-300">Find Your Teammates</h1>
-
-          <div className="flex gap-5 lg:flex-row flex-col lg:items-center text-gray-300">
+    <div className="min-h-screen py-8 px-2 bg-gradient-to-br from-blue-900 via-purple-900 to-orange-700 pb-16">
+      {/* Filters & Heading */}
+      <div className="max-w-7xl mx-auto mb-6 px-4">
+        <div className="flex flex-col gap-4">
+          <h1 className="font-bold text-3xl text-center text-wrap text-gray-300">Find Your Teammates</h1>
+          <div className="flex flex-wrap gap-4 justify-center items-center w-full">
+            {/* Name Search */}
+            <div className="flex flex-col items-center min-w-[200px]">
+              <label className="text-sm font-semibold text-gray-300 mb-1">Search by Name</label>
+              <input
+                type="text"
+                value={nameSearch}
+                onChange={e => setNameSearch(e.target.value)}
+                placeholder="Type name..."
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-gray-500 bg-gray-200 placeholder:text-gray-500 focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
             {/* Skill Filter */}
             <div className="flex flex-col items-center min-w-[200px]">
               <label className="text-sm font-semibold text-gray-300 mb-1">Skill</label>
               <input
-                type="text"
-                placeholder="Type skill & press Enter..."
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-gray-500
-                 bg-gray-200 placeholder:text-gray-500   focus:ring-1 focus:ring-blue-500"
-                onKeyDown={e => {
-                  if (e.key === "Enter" && e.currentTarget.value.trim()) {
-                    setSkillFilter([...skillFilter, e.currentTarget.value.trim()]);
-                    e.currentTarget.value = "";
-                  }
-                }}
-              />
+  type="text"
+  placeholder="Type skill & press Enter..."
+  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-gray-500 bg-gray-200 placeholder:text-gray-500 focus:ring-1 focus:ring-blue-500"
+  onKeyDown={e => {
+    if (e.key === "Enter" && e.currentTarget.value.trim()) {
+      const newSkill = e.currentTarget.value.trim().toLowerCase(); // normalize
+      if (!skillFilter.includes(newSkill)) {
+        setSkillFilter([...skillFilter, newSkill]); // avoid duplicates
+      }
+      e.currentTarget.value = "";
+    }
+  }}
+/>
+
               {skillFilter.length > 0 && (
                 <div className="flex gap-2 flex-wrap mt-2">
                   {skillFilter.map(skill => (
                     <span
                       key={skill}
-                      className="px-2 py-1 bg-gray-200 placeholder:text-gray-500   text-blue-800 rounded-full text-xs flex items-center"
+                      className="px-2 py-1 bg-gray-200 placeholder:text-gray-500 text-blue-800 rounded-full text-xs flex items-center"
                     >
                       {skill}
                       <button
@@ -265,7 +301,7 @@ export default function Profiles() {
               <label className="text-sm font-semibold text-gray-300 mb-1">Year</label>
               <select
                 value={yearFilter}
-                onChange={e => setYearFilter(e.target.value)}
+                onChange={e => setYearFilter(e.target.value as "" | "1" | "2" | "3" | "4" | "Others")}
                 className="px-3 py-2 border text-gray-500 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
               >
                 {yearOptions.map(opt => (
@@ -337,6 +373,7 @@ export default function Profiles() {
                         ? "https://png.pngtree.com/png-clipart/20230927/original/pngtree-man-avatar-image-for-profile-png-image_13001882.png"
                         : "https://img.freepik.com/premium-vector/cute-woman-avatar-profile-vector-illustration_1058532-14592.jpg?w=2000";
                   }}
+                  style={{ maxWidth: '100%', height: 'auto' }}
                 />
                 <h3 className="text-lg font-bold text-blue-900 mb-1">{user.name}</h3>
                 {/* Teams Joined Badge */}
@@ -358,12 +395,35 @@ export default function Profiles() {
                     <span key={skill} className="px-2 py-1 bg-blue-50 text-blue-800 text-xs rounded">{skill}</span>
                   ))}
                 </div>
-                <p className="text-sm text-gray-600 mt-2 line-clamp-3 text-center min-h-[48px] flex items-center justify-center">{user.bio}</p>
+                <p
+                  className={`text-sm text-gray-600 mt-2 text-center min-h-[48px] flex items-center justify-center ${expandedDesc === user._id ? '' : 'truncate overflow-hidden max-w-full'}`}
+                  style={expandedDesc === user._id ? { whiteSpace: 'pre-line' } : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', whiteSpace: 'normal' }}
+                  onClick={() => setExpandedDesc(expandedDesc === user._id ? null : user._id)}
+                  title={expandedDesc === user._id ? 'Click to collapse' : 'Click to expand'}
+                  role="button"
+                  tabIndex={0}
+                >
+                  {user.bio}
+                  {user.bio && user.bio.length > 80 && expandedDesc !== user._id && (
+                    <span className="text-blue-500 cursor-pointer ml-1">...more</span>
+                  )}
+                </p>
                 <div className="flex gap-2 mt-2 justify-center min-h-[24px] items-center">
                   {user.links && user.links.length > 0 ? (
-                    user.links.map((link: string) => (
-                      <a key={link} href={link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-900 text-xs underline">{link}</a>
-                    ))
+                    <div className="flex flex-wrap gap-1 justify-center w-full max-w-full">
+                      {user.links.map((link: string) => (
+                        <a
+                          key={link}
+                          href={link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-900 text-xs underline break-all max-w-[120px] truncate inline-block"
+                          title={link}
+                        >
+                          {link}
+                        </a>
+                      ))}
+                    </div>
                   ) : (
                     <span className="text-xs text-gray-400 italic">Socials not provided</span>
                   )}

@@ -103,48 +103,55 @@ export const createOrUpdateProfile = mutation({
 // ✅ List profiles with optional filters
 export const listAvailableProfiles = query({
   args: {
-    skillFilter: v.optional(v.string()),
-    genderFilter: v.optional(
-      v.union(v.literal("m"), v.literal("f"), v.literal("o"))
-    ),
+    skillFilter: v.optional(v.array(v.string())), // accept array of skills
+    yearFilter: v.optional(v.union(
+      v.literal("1"),
+      v.literal("2"),
+      v.literal("3"),
+      v.literal("4"),
+      v.literal("Others")
+    )),
+    genderFilter: v.optional(v.union(v.literal("m"), v.literal("f"), v.literal("o"))),
     lookingOnly: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    let profiles;
+    let profiles = await ctx.db.query("profiles").collect();
 
+    // Apply filters one by one
     if (args.lookingOnly) {
-      profiles = await ctx.db
-        .query("profiles")
-        .withIndex("by_looking", (q) => q.eq("isLooking", true))
-        .collect();
-    } else if (args.genderFilter) {
-      profiles = await ctx.db
-        .query("profiles")
-        .withIndex("by_gender", (q) => q.eq("gender", args.genderFilter!))
-        .collect();
-    } else {
-      profiles = await ctx.db.query("profiles").collect();
+      profiles = profiles.filter(p => p.isLooking);
     }
 
-    let filteredProfiles = profiles;
+    if (args.genderFilter) {
+      profiles = profiles.filter(p => p.gender === args.genderFilter);
+    }
 
-    if (args.skillFilter) {
-      filteredProfiles = profiles.filter((profile) =>
-        profile.skills.some((skill: string) =>
-          skill.toLowerCase().includes(args.skillFilter!.toLowerCase())
+    if (args.yearFilter) {
+      profiles = profiles.filter(p =>
+        args.yearFilter === "Others"
+          ? !["1", "2", "3", "4"].includes(String(p.year))
+          : String(p.year) === args.yearFilter
+      );
+    }
+
+    if (args.skillFilter && args.skillFilter.length > 0) {
+      profiles = profiles.filter(p =>
+        p.skills?.some((s: string) =>
+          args.skillFilter!.some(f => s.toLowerCase().includes(f.toLowerCase()))
         )
       );
     }
 
+    // Attach extra fields
     const viewerId = await getAuthUserId(ctx);
     return Promise.all(
-      filteredProfiles.map(async (profile) => {
+      profiles.map(async (profile) => {
         const userTeams = await ctx.db
           .query("teamMembers")
-          .withIndex("by_user", (q) => q.eq("userId", profile.userId))
+          .withIndex("by_user", q => q.eq("userId", profile.userId))
           .collect();
 
-        const teamsJoined = userTeams.map((tm) => tm.teamId);
+        const teamsJoined = userTeams.map(tm => tm.teamId);
 
         let contactInfo: string | undefined = undefined;
         if (viewerId === profile.userId) {
@@ -152,12 +159,11 @@ export const listAvailableProfiles = query({
         } else if (viewerId) {
           const shares = await ctx.db
             .query("contactShares")
-            .withIndex  ("by_owner_viewer", (q) =>
+            .withIndex("by_owner_viewer", q =>
               q.eq("ownerUserId", profile.userId).eq("viewerUserId", viewerId)
             )
             .collect();
-
-          if (shares.some((s) => s.authorized)) {
+          if (shares.some(s => s.authorized)) {
             contactInfo = profile.contactInfo;
           }
         }
@@ -175,6 +181,7 @@ export const listAvailableProfiles = query({
     );
   },
 });
+
 
 // ✅ Upload URL for profile pictures
 export const generateUploadUrl = mutation({
